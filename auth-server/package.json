@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "compile-watch": "./node_modules/.bin/tsc -w -p src",
-    "start-dev": "./node_modules/.bin/nodemon dist/server.js",
+    "start-dev": "JWT_SECRET=\"That is not dead which can eternal lie, And with strange aeons even death may die.\" ./node_modules/.bin/nodemon dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "fastify": "^3.13.0",
+    "fastify-cookie": "^5.1.0",
     "fastify-jwt": "^2.3.0"
   },
   "devDependencies": {
