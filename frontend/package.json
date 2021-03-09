@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start-dev": "python -m SimpleHTTPServer 8000"
+  },
+  "devDependencies": {
+    "express": "^4.17.1"
+  }
+}
