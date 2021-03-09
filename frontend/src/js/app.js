@@ -7,11 +7,8 @@ angular
       requireBase: false
     })
 
-    var loginState = {
-      name: 'login',
-      url: '/login',
-      component: 'login'
-    }
+    // TODO provide a state that checks for logged user, and sends them to /users
 
-    $stateProvider.state(loginState);
+    $stateProvider.state({name: 'login', url: '/login', component: 'login'})
+    $stateProvider.state({name: 'users', url: '/users', component: 'users'})
   })
