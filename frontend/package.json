@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start-dev": "python -m SimpleHTTPServer 8000"
+    "start-dev": "node express-dev-server.js"
   },
   "devDependencies": {
     "express": "^4.17.1"
