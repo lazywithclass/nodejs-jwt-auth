@@ -15,7 +15,7 @@ namespace server {
   fastify.register(require('fastify-cookie'))
   fastify.register(require('fastify-auth'))
 
-  const verifyJWT = (request, reply, done) => {
+  const verifyJWT = async (request, reply, done) => {
     if (request.body && request.body.failureWithReply) {
       reply.code(401).send({ error: 'Unauthorized' })
       return done(new Error())
@@ -27,9 +27,9 @@ namespace server {
     }
 
     try {
-      // TODO is this async?
-      request.jwtVerify()
+      await request.jwtVerify()
     } catch (err) {
+      console.log(err)
       return done(err)
     }
 
@@ -56,7 +56,12 @@ namespace server {
 
   fastify.after(() => {
     const routes = require('./routes')
-    fastify.get('/', routes.root)
+    fastify.route({
+      method: 'GET',
+      url: '/whoami',
+      preHandler: fastify.auth([fastify.verifyJWT]),
+      handler: routes.whoami
+    })
     fastify.route({
       method: 'GET',
       url: '/users',

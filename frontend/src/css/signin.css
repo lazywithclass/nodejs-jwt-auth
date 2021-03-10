@@ -4,15 +4,16 @@ body {
 }
 
 body {
-  display: flex;
-  align-items: center;
-  padding-top: 40px;
   padding-bottom: 40px;
   background-color: #f5f5f5;
 }
 
 ui-view {
   width: 100%;
+}
+
+nav.navbar {
+  margin-bottom: 40px;
 }
 
 .form-signin {
@@ -42,4 +43,18 @@ table {
   max-width: 50%;
   padding: 15px;
   margin: auto;
+}
+
+.nav-link {
+  padding-right: .5rem !important;
+  padding-left: .5rem !important;
+}
+
+.navbar {
+  min-height: 56px;
+}
+
+.ml-auto {
+  left: auto !important;
+  right: 0px;
 }

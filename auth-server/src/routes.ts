@@ -3,7 +3,7 @@ namespace routes {
   const DOMAIN = process.env.DOMAIN
   const db = require('./db')
 
-  const root = async function(request, reply) {
+  const whoami = async function(request, reply) {
     return request.user
   }
 
@@ -21,8 +21,10 @@ namespace routes {
       return { message: "username not found or password not valid" }
     }
 
+    // https://stackoverflow.com/questions/21978658/invalidating-json-web-tokens#comment45057142_23089839
     const accessToken = this.jwt.sign({
-      data: 'foobar',
+      answer: 42
+    }, {
       expiresIn: '15m'
     });
 
@@ -36,6 +38,6 @@ namespace routes {
     return { username }
   }
 
-  module.exports = { root, listUsers, login }
+  module.exports = { whoami, listUsers, login }
 
 }
