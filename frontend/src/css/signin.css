@@ -39,5 +39,7 @@ button {
 }
 
 table {
-  width: 75% !important;
+  max-width: 50%;
+  padding: 15px;
+  margin: auto;
 }
