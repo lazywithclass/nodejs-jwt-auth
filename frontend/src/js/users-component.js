@@ -1,23 +1,21 @@
 angular.module('auth').component('users', {
   template: `
-    <main>
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Username</th>
-            <th scope="col">Password</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="">
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr>
-        </tbody>
-      </table>
-    </main>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Username</th>
+          <th scope="col">Password</th>
+          <th scope="col">Roles</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="user in $ctrl.users">
+          <th scope="row">{{user.username}}</th>
+          <td>{{user.password}}</td>
+          <td>{{user.roles}}</td>
+        </tr>
+      </tbody>
+    </table>
   `,
   bindings: {
   },
@@ -25,8 +23,10 @@ angular.module('auth').component('users', {
     $http
       .get('//test.app.localhost:3000/users')
       .then((res) => {
-        // TODO request using cookie
-        console.log(res)
+        this.users = Object.values(res.data)
+      })
+      .catch((res) => {
+        $state.go('login')
       })
   }
 });

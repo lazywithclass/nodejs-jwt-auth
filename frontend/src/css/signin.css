@@ -37,3 +37,7 @@ ui-view {
 button {
   margin-top: 10px;
 }
+
+table {
+  width: 75% !important;
+}

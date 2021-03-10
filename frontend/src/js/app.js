@@ -12,3 +12,7 @@ angular
     $stateProvider.state({name: 'login', url: '/login', component: 'login'})
     $stateProvider.state({name: 'users', url: '/users', component: 'users'})
   })
+  .config(['$httpProvider', function($httpProvider) {
+    $httpProvider.defaults.withCredentials = true
+    $httpProvider.defaults.xsrfCookieName = 'token'
+  }])

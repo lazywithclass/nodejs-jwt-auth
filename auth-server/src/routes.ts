@@ -11,6 +11,7 @@ namespace routes {
     return db.read('users')
   }
 
+// replace this with the hook we have in server?
   const login = async function(request, reply) {
     const { username, password } = request.body
     const dbUser = db.read('users', username)
@@ -26,7 +27,10 @@ namespace routes {
     });
 
     reply.setCookie('token', accessToken, {
-      domain: DOMAIN, path: '/', secure: true, httpOnly: true, sameSite: true
+      // TODO secure: false here should be removed
+      // as I've added it just for the testing env
+      // fix: have https even in test
+      domain: DOMAIN, path: '/', secure: false, httpOnly: true, sameSite: true
     })
     .code(200)
     return { username }

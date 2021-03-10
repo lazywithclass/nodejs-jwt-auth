@@ -2,7 +2,10 @@ namespace server {
 
   const db = require('./db')
   const fastify = require('fastify')({ logger: true })
-  fastify.register(require('fastify-cors'))
+  fastify.register(require('fastify-cors'), {
+    origin: true,
+    credentials: true
+  })
   fastify.register(require('fastify-jwt'), {
     secret: process.env.JWT_SECRET,
     cookie: {
@@ -18,8 +21,9 @@ namespace server {
       return done(new Error())
     }
 
-    if (!request.raw.headers.auth) {
-      return done(new Error('Missing token header'))
+    const token = request.cookies.token
+    if (!token) {
+      reply.code(401).send({ error: 'Unauthorized' })
     }
 
     try {
@@ -56,11 +60,11 @@ namespace server {
     fastify.route({
       method: 'GET',
       url: '/users',
-      preHandler: fastify.auth([fastify.verifyJWT, fastify.verifyCredentials]),
+      preHandler: fastify.auth([fastify.verifyJWT]),
       handler: routes.listUsers
     })
 
-    fastify.post('/login', routes.login.bind(fastify))
+    fastify.post('/login', routes.login)
   })
 
   // TODO Should I put this into after?

@@ -2,7 +2,10 @@
   "users": {
     "montecristo": {
       "username": "montecristo",
-      "password": "chateaudif"
+      "password": "chateaudif",
+      "roles": [
+        "admin"
+      ]
     }
   }
 }
