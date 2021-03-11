@@ -58,3 +58,8 @@ table {
   left: auto !important;
   right: 0px;
 }
+
+a.logout:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}

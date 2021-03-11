@@ -5,7 +5,7 @@ angular.module('auth').component('header', {
           <ul class="nav navbar-nav mr-auto"></ul>
           <ul class="nav navbar-nav">
               <li class="nav-item" ng-hide="$ctrl.userIsLoggedOut">
-                  <a class="nav-link" href="#">Logout</a>
+                  <a class="nav-link logout" ng-click="$ctrl.logout()">Logout</a>
               </li>
           </ul>
       </div>
@@ -13,16 +13,28 @@ angular.module('auth').component('header', {
   `,
   bindings: {
   },
-  controller: function($http, $state) {
+  controller: function($scope, $http, $state) {
     this.userIsLoggedOut = true
-    $http
-      .get('//test.app.localhost:3000/whoami')
-      .then((res) => {
-        console.log("WHOAMI", res)
-        this.userIsLoggedOut = false
-      })
-      .catch((res) => {
-        this.userIsLoggedOut = true
-      })
+    $scope.$watch(() => {
+      return $state.$current.name
+    }, (newVal, oldVal) => {
+      $http
+        .get('//test.app.localhost:3000/whoami')
+        .then((res) => this.userIsLoggedOut = false)
+        .catch((res) => this.userIsLoggedOut = true)
+    })
+
+    this.logout = () => {
+      $http
+        .post('//test.app.localhost:3000/logout', {})
+        .then((res) => {
+          this.userIsLoggedOut = true
+          $state.go('login')
+        })
+        .catch((res) => {
+          this.userIsLoggedOut = true
+          $state.go('login')
+        })
+    }
   }
 });

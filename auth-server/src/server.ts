@@ -30,7 +30,7 @@ namespace server {
       await request.jwtVerify()
     } catch (err) {
       console.log(err)
-      return done(err)
+      return done({ error: 'Unauthorized' })
     }
 
     return done()
@@ -70,6 +70,7 @@ namespace server {
     })
 
     fastify.post('/login', routes.login)
+    fastify.post('/logout', routes.logout)
   })
 
   // TODO Should I put this into after?

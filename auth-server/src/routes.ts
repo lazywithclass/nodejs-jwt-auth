@@ -3,15 +3,14 @@ namespace routes {
   const DOMAIN = process.env.DOMAIN
   const db = require('./db')
 
-  const whoami = async function(request, reply) {
+  const whoami = async (request, reply) => {
     return request.user
   }
 
-  const listUsers = async function(request, reply) {
+  const listUsers = async (request, reply) => {
     return db.read('users')
   }
 
-// replace this with the hook we have in server?
   const login = async function(request, reply) {
     const { username, password } = request.body
     const dbUser = db.read('users', username)
@@ -38,6 +37,21 @@ namespace routes {
     return { username }
   }
 
-  module.exports = { whoami, listUsers, login }
+  const logout = async function(request, reply) {
+    // TODO this does not work in a distributed environment, how to log out of all
+    // other services?
+    const accessToken = this.jwt.sign({}, {
+      expiresIn: '0m'
+    })
+    reply.setCookie('token', accessToken, {
+      // TODO secure: false here should be removed
+      // as I've added it just for the testing env
+      // fix: have https even in test
+      domain: DOMAIN, path: '/', secure: false, httpOnly: true, sameSite: true
+    })
+    .code(200)
+    return {}
+  }
 
+  module.exports = { whoami, listUsers, login, logout }
 }
