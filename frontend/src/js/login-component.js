@@ -26,14 +26,8 @@ angular.module('auth').component('login', {
       // TODO remove url and pass it somehow
       $http
         .post('//test.app.localhost:3000/login', user)
-        .then((res) => {
-          // TODO where should I store the cookie? should I do anything?
-          // have a look at https://github.com/auth0/angular-jwt
-          $state.go('users')
-        })
-        .catch((res) => {
-          this.errorMessage = res.data.message
-        })
+        .then((res) => $state.go('users'))
+        .catch((res) => this.errorMessage = res.data.message)
     }
 
   }

@@ -20,13 +20,12 @@ angular.module('auth').component('users', {
   bindings: {
   },
   controller: function($http, $state) {
-    $http
-      .get('//test.app.localhost:3000/users')
-      .then((res) => {
-        this.users = Object.values(res.data)
-      })
-      .catch((res) => {
-        $state.go('login')
-      })
+    const getUsers = () => {
+      $http
+        .get('//test.app.localhost:3000/users')
+        .then((res) => this.users = Object.values(res.data))
+        .catch(() => $state.go('login'))
+    }
+    getUsers()
   }
 });
