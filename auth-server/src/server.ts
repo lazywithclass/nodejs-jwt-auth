@@ -5,7 +5,7 @@ namespace server {
   const db = require('./db')
   const routes = require('./routes')
   const jwtTokens = require('./jwt-tokens')
-  const fastify = require('fastify')({ logger: true })
+  const fastify = require('fastify')({ logger: false })
   fastify.register(require('fastify-cors'), {
     origin: true,
     credentials: true
@@ -37,13 +37,14 @@ namespace server {
 
   const verifyJWT = async (request, reply, done) => {
     if (request.body && request.body.failureWithReply) {
-      reply.code(401).send({ error: 'Unauthorized' })
+      reply.code(401).send({ message: 'Unauthorized' })
       return done(new Error())
     }
 
     const token = request.cookies.token
     if (!token) {
-      reply.code(401).send({ error: 'Unauthorized' })
+      console.log('No token found in the cookie')
+      reply.code(401).send({ message: 'Unauthorized' })
       return done(new Error())
     }
 
@@ -51,18 +52,31 @@ namespace server {
       await request.jwtVerify()
     } catch (err) {
       if (err.message == 'Authorization token expired') {
-        // I am not particularly proud of this
-        // I would've loved to redirect to /refresh and then come
-        // back here to finish the job
+        const username = fastify.jwt.decode(token).sub
 
-        // TODO check in the db for valid credentials
+        jwtTokens
+          .canCreate(username, request.cookies.refreshToken)
+          .then(canCreate => {
+            if (!canCreate) {
+              console.log('Preventing token from refreshing, records do not match')
+              reply.code(401).send({ message: 'Unauthorized' })
+              return done(new Error())
+            }
 
-        const { accessToken, refreshToken } = jwtTokens.create(fastify.jwt)
-        routes.setCookiesInResponse(reply, accessToken, refreshToken)
-        return done()
+            return jwtTokens.create(fastify.jwt, username)
+              .then(tokens => {
+                routes.setCookiesInResponse(reply, tokens.accessToken, tokens.refreshToken)
+                return { username }
+              })
+              .catch((err) => {
+                console.log('Error creating jwt tokens', err)
+                reply.code(401).send({ message: 'Unauthorized' })
+                return done(new Error())
+              })
+          })
       }
 
-      reply.code(401).send({ error: 'Unauthorized' })
+      reply.code(401).send({ message: 'Unauthorized' })
       return done(new Error())
     }
 
@@ -92,18 +106,9 @@ namespace server {
       preHandler: fastify.auth([fastify.verifyJWT]),
       handler: routes.listUsers
     })
-    // TODO is it a good idea to expose a /refresh route?
-    // shouldn't the behaviour be transparent?
-    fastify.route({
-      method: 'GET',
-      url: '/refresh',
-      preHandler: fastify.auth([fastify.verifyJWT]),
-      handler: routes.refreshAccessToken
-    })
     fastify.post('/login', routes.login)
     fastify.post('/logout', routes.logout)
   })
 
-  // TODO Should I put this into after?
   fastify.listen(3000, err => { if (err) throw err })
 }

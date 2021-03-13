@@ -14,33 +14,31 @@ namespace routes {
     if (!username || !password || !dbUser || dbUser.password !== password) {
       // don't leak info about our users
 	    reply.code(404)
-      return { message: 'username not found or password not valid' }
+      return { message: 'Username not found or password not valid' }
     }
 
-    // TODO also remember to add different roles to tokens,
-    // so you could show how to query the books server
-    // without touching the auth server
-    const { accessToken, refreshToken } = jwtTokens.create(this.jwt)
-    setCookiesInResponse(reply, accessToken, refreshToken)
-
-    return { username }
+    return jwtTokens.create(this.jwt, username)
+      .then(tokens => {
+        setCookiesInResponse(reply, tokens.accessToken, tokens.refreshToken)
+        return { username }
+      })
+      .catch((err) => {
+        console.log('Error creating jwt tokens', err)
+        reply.code(401)
+        return { message: 'Unauthorized' }
+      })
   }
 
   const logout = async function(request, reply) {
     // TODO this does not work in a distributed environment, how to log out of all
     // other services?
+    // check if after the delete from redis this all makes sense
+    const username = this.jwt.decode(request.cookies.token).sub
+    jwtTokens.remove(username)
     const accessToken = this.jwt.sign({}, { expiresIn: '0m' })
     const refreshToken = this.jwt.sign({}, { expiresIn: '0m' })
     setCookiesInResponse(reply, accessToken, refreshToken)
     return {}
-  }
-
-  const refreshAccessToken = async function(request, reply) {
-    // TODO check if refresh token is in database
-    const { accessToken, refreshToken } = jwtTokens.newTokens(this.jwt)
-    // TODO update refresh token
-    setCookiesInResponse(reply, accessToken, refreshToken)
-    return { oh: 'hai' }
   }
 
   const setCookiesInResponse = (reply, accessToken, refreshToken) => {
@@ -68,7 +66,6 @@ namespace routes {
     listUsers,
     login,
     logout,
-    refreshAccessToken,
     setCookiesInResponse
   }
 }
