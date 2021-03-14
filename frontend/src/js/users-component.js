@@ -10,7 +10,7 @@ angular.module('auth').component('users', {
       </thead>
       <tbody>
         <tr ng-repeat="user in $ctrl.users">
-          <th scope="row">{{user.username}}</th>
+          <td>{{user.username}}</td>
           <td>{{user.password}}</td>
           <td>{{user.roles}}</td>
         </tr>

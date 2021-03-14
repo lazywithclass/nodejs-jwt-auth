@@ -1,6 +1,8 @@
 namespace routes {
 
   const DOMAIN = process.env.DOMAIN
+  const fs = require('fs')
+  const jose = require('node-jose')
   const jwtTokens = require('./jwt-tokens')
   const db = require('./db')
 
@@ -17,16 +19,17 @@ namespace routes {
       return { message: 'Username not found or password not valid' }
     }
 
-    return jwtTokens.create(this.jwt, username)
-      .then(tokens => {
-        setCookiesInResponse(reply, tokens.accessToken, tokens.refreshToken)
-        return { username }
-      })
-      .catch((err) => {
-        console.log('Error creating jwt tokens', err)
-        reply.code(401)
-        return { message: 'Unauthorized' }
-      })
+    try {
+      return jwtTokens.create(this.jwt, username)
+        .then(tokens => {
+          setCookiesInResponse(reply, tokens.accessToken, tokens.refreshToken)
+          return { username }
+        })
+    } catch (err) {
+      console.log('Error creating jwt tokens', err)
+      reply.code(401)
+      return { message: 'Unauthorized' }
+    }
   }
 
   const logout = async function(request, reply) {
@@ -61,11 +64,19 @@ namespace routes {
       .code(200)
   }
 
+  const jwks = async function(request, reply) {
+
+    const ks = fs.readFileSync('certs/keys.json')
+    const keyStore = await jose.JWK.asKeyStore(ks.toString())
+    return keyStore.toJSON()
+  }
+
   module.exports = {
     whoami,
     listUsers,
     login,
     logout,
-    setCookiesInResponse
+    setCookiesInResponse,
+    jwks
   }
 }

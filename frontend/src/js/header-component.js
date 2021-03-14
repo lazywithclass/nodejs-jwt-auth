@@ -2,7 +2,14 @@ angular.module('auth').component('header', {
   template: `
   <nav class="navbar navbar-expand-lg navbar-light bg-light ml-auto">
       <div class="container">
-          <ul class="nav navbar-nav mr-auto"></ul>
+          <ul class="nav navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link logout" href="/users">Users</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link logout" href="/books">Books</a>
+            </li>
+          </ul>
           <ul class="nav navbar-nav">
               <li class="nav-item" ng-hide="$ctrl.userIsLoggedOut">
                   <a class="nav-link logout" ng-click="$ctrl.logout()">Logout</a>

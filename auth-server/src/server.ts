@@ -11,8 +11,15 @@ namespace server {
     credentials: true
   })
   fastify.register(require('fastify-cookie'))
+  const buildGetJwks = require('get-jwks')
+  const getJwks = buildGetJwks()
   fastify.register(require('fastify-jwt'), {
-    secret: process.env.JWT_SECRET,
+    decode: { complete: true },
+    secret: (request, token, callback) => {
+      const { header: { kid, alg }, payload: { iss } } = token
+      getJwks.getPublicKey({ kid, domain: iss, alg })
+        .then(publicKey => callback(null, publicKey), callback)
+    },
     cookie: {
       cookieName: 'token'
     }
@@ -54,28 +61,32 @@ namespace server {
       if (err.message == 'Authorization token expired') {
         const username = fastify.jwt.decode(token).sub
 
+
         jwtTokens
           .canCreate(username, request.cookies.refreshToken)
           .then(canCreate => {
+
             if (!canCreate) {
               console.log('Preventing token from refreshing, records do not match')
               reply.code(401).send({ message: 'Unauthorized' })
               return done(new Error())
             }
 
-            return jwtTokens.create(fastify.jwt, username)
-              .then(tokens => {
-                routes.setCookiesInResponse(reply, tokens.accessToken, tokens.refreshToken)
-                return { username }
-              })
-              .catch((err) => {
-                console.log('Error creating jwt tokens', err)
-                reply.code(401).send({ message: 'Unauthorized' })
-                return done(new Error())
-              })
+            try {
+              return jwtTokens.create(fastify.jwt, username)
+                .then(tokens => {
+                  routes.setCookiesInResponse(reply, tokens.accessToken, tokens.refreshToken)
+                  return { username }
+                })
+            } catch (err) {
+              console.log('Error creating jwt tokens', err)
+              reply.code(401).send({ message: 'Unauthorized' })
+              return done(new Error())
+            }
           })
       }
 
+      console.log(err)
       reply.code(401).send({ message: 'Unauthorized' })
       return done(new Error())
     }
@@ -106,6 +117,7 @@ namespace server {
       preHandler: fastify.auth([fastify.verifyJWT]),
       handler: routes.listUsers
     })
+    fastify.get('/.well-known/jwks.json', routes.jwks)
     fastify.post('/login', routes.login)
     fastify.post('/logout', routes.logout)
   })
