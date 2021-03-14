@@ -1,6 +1,6 @@
 angular.module('auth').component('users', {
   template: `
-    <table class="table">
+    <table class="table" ng-show="$ctrl.canViewData">
       <thead>
         <tr>
           <th scope="col">Username</th>
@@ -16,15 +16,20 @@ angular.module('auth').component('users', {
         </tr>
       </tbody>
     </table>
+    <span ng-show="!$ctrl.canViewData">You are not allowed to view this data</span>
   `,
   bindings: {
   },
   controller: function($http, $state) {
+    this.canViewData = true
     const getUsers = () => {
       $http
         .get('//test.app.localhost:3000/users')
-        .then((res) => this.users = Object.values(res.data))
-        .catch(() => $state.go('login'))
+        .then((res) => {
+          this.canViewData = true
+          this.users = Object.values(res.data)
+        })
+        .catch(() => this.canViewData = false)
     }
     getUsers()
   }

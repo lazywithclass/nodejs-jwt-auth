@@ -1,6 +1,5 @@
 angular.module('auth').component('books', {
   template: `
-
     <table class="table" ng-show="$ctrl.canViewData">
       <thead>
         <tr>
@@ -27,8 +26,6 @@ angular.module('auth').component('books', {
         this.canViewData = true
         this.books = Object.values(res.data)
       })
-      .catch((e) => {
-        this.canViewData = false
-      })
+      .catch((e) => this.canViewData = false)
   }
 });

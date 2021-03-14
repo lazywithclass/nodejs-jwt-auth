@@ -1,5 +1,8 @@
 namespace db {
 
+  // This is an abstract version of what a db would be in the real world
+  // I did not use a proper db because I thought it was out of the scope of this
+
   const DB_PATH = '../db.json'
   const fs = require('fs')
 

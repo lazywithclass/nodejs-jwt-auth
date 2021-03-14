@@ -43,6 +43,7 @@ namespace server {
   }
 
   const verifyJWT = async (request, reply, done) => {
+    // TODO is this needed?
     if (request.body && request.body.failureWithReply) {
       reply.code(401).send({ message: 'Unauthorized' })
       return done(new Error())
@@ -94,8 +95,19 @@ namespace server {
     return done()
   }
 
+  const verifyAdmin = async (request, reply, done) => {
+    const token = request.cookies.token
+    const audience = fastify.jwt.decode(token).payload.aud
+    if (audience.indexOf('admin') == -1) {
+      reply.code(401).send({ message: 'Unauthorized' })
+      return done(new Error())
+    }
+    return done()
+  }
+
   fastify.decorate('verifyJWT', verifyJWT)
   fastify.decorate('verifyCredentials', verifyCredentials)
+  fastify.decorate('verifyAdmin', verifyAdmin)
 
   // TODO at the end also provide a mean to use the endpoints with APIs, not just
   // cookies, because they're required by the frontend
@@ -114,8 +126,11 @@ namespace server {
     fastify.route({
       method: 'GET',
       url: '/users',
-      preHandler: fastify.auth([fastify.verifyJWT]),
-      handler: routes.listUsers
+      handler: routes.listUsers,
+      preHandler: fastify.auth([
+        fastify.verifyJWT,
+        verifyAdmin
+      ], { run: 'all' }),
     })
     fastify.get('/.well-known/jwks.json', routes.jwks)
     fastify.post('/login', routes.login)

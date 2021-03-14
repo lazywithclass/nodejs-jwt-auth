@@ -6,6 +6,13 @@
       "roles": [
         "admin"
       ]
+    },
+    "alberto": {
+      "username": "alberto",
+      "password": "alberto",
+      "roles": [
+        "reader"
+      ]
     }
   }
 }
