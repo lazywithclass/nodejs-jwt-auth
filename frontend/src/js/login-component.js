@@ -8,9 +8,6 @@ angular.module('auth').component('login', {
         <label for="inputPassword" class="visually-hidden">Password</label>
         <input ng-model="user.password" type="password" id="inputPassword" class="form-control" placeholder="Password" required>
         <div class="mb-3">
-          <a href="forgot-password.html">Forgot your password?</a>
-        </div>
-        <div class="mb-3">
           <span>{{$ctrl.errorMessage}}</span>
         </div>
         <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
