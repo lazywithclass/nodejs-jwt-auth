@@ -33,10 +33,7 @@ namespace routes {
   }
 
   const logout = async function(request, reply) {
-    // TODO this does not work in a distributed environment, how to log out of all
-    // other services?
-    // check if after the delete from redis this all makes sense
-    const username = this.jwt.decode(request.cookies.token).sub
+    const username = this.jwt.decode(request.cookies.token).payload.sub
     jwtTokens.remove(username)
     const accessToken = this.jwt.sign({}, { expiresIn: '0m' })
     const refreshToken = this.jwt.sign({}, { expiresIn: '0m' })

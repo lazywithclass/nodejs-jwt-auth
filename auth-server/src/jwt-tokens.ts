@@ -20,6 +20,17 @@ namespace tokens {
 
   const redisRefreshTokenKey = username => `refresh-token-${username}`
 
+  const isRefreshTokenPresent = (username) => {
+    return new Promise((resolve, reject) => {
+      return redisClient.get(redisRefreshTokenKey(username), function(err, redisRefreshToken) {
+        if (err) {
+          return reject(err)
+        }
+        return resolve(redisRefreshToken)
+      })
+    })
+  }
+
   const canCreate = (username, oldRefreshToken) => {
     return new Promise((resolve, reject) => {
       redisClient.get(redisRefreshTokenKey(username), function(err, redisRefreshToken) {
@@ -32,7 +43,7 @@ namespace tokens {
   }
 
   // this function has been "ruined" by the lack of Promises in node-redis,
-  // I've trie wrapping it but failed, so it's a bit ugly
+  // I've tried wrapping it but failed, so it's a bit ugly
   const create = (jwt, username) => {
     return new Promise((resolve, reject) => {
       const ks = fs.readFileSync('certs/keys.json')
@@ -87,51 +98,64 @@ namespace tokens {
 
   const remove = username => {
     redisClient.del(redisRefreshTokenKey(username), (err, reply) => {
+      console.log("REMOVINMG", redisRefreshTokenKey(username))
       if (err) {
         console.log('Could not remove refresh token from redis', err)
       }
     })
   }
 
-
   // expects date to be ms since epoch up to the time at which
   // we want to remove tokens
-  const removeUpToDate = (removeUpTo) => {
+  const removeUpToDate = (removeUpTo, done) => {
     const msNow = new Date().getTime()
     const usernames = Object.keys(db.read('users'))
-    usernames.forEach(u => {
-      redisClient.get(redisRefreshTokenKey(u), (err, token) => {
-        if (!token) {
-          return
-        }
 
-        const ks = require('../certs/keys.json')
-        // TODO I've tried using
-        // jose.JWK.asKeyStore(ks.toString()).then(keyStore => {
-        // const [key] = keyStore.all({ alg: 'RS256' })
-        // but then key is missing some properties, I couldn't find
-        // a way to get all of them using keyStore APIs
-        const key = ks.keys[0]
-        var pem = jwkToPem(key)
-        jwt.verify(token, pem, { algorithms: ['RS256'] }, function(err, decodedToken) {
-          if (err) {
-              console.log('Error:', '\n', err, '\n');
+    return Promise.all(usernames.map(async u => {
+      return new Promise((resolve, reject) => {
+        return redisClient.get(redisRefreshTokenKey(u), (err, token) => {
+          if (!token) {
+            console.log(`No token found for username '${u}'`)
+            return resolve(u)
           }
-          if (decodedToken.iat < removeUpTo) {
-            redisClient.del(redisRefreshTokenKey(u), function(err) {
-              if (err) {
-                console.log(`Failed to remove ${redisRefreshTokenKey(u)}`)
-              }
-            })
-          }
+
+          const ks = require('../certs/keys.json')
+          // I've tried using
+          // jose.JWK.asKeyStore(ks.toString()).then(keyStore => {
+          // const [key] = keyStore.all({ alg: 'RS256' })
+          // but then key is missing some properties, I couldn't find
+          // a way to get all of them using keyStore APIs
+          const key = ks.keys[0]
+          var pem = jwkToPem(key)
+          return jwt.verify(token, pem, { algorithms: ['RS256'] }, function(err, decodedToken) {
+            if (err) {
+                console.log(err)
+                return reject(err)
+            }
+
+            console.log((decodedToken.iat * 1000), removeUpTo)
+            if ((decodedToken.iat * 1000) < removeUpTo) {
+              return redisClient.del(redisRefreshTokenKey(u), function(err) {
+                if (err) {
+                  console.log(`Failed to remove ${redisRefreshTokenKey(u)}`)
+                  return reject(err)
+                }
+                return resolve(u)
+              })
+            }
+            return resolve(u)
+          })
         })
       })
-    })
+    }))
   }
+
 
   module.exports = {
     canCreate,
     create,
-    remove
+    remove,
+    isRefreshTokenPresent,
+    removeUpToDate
   }
 }

@@ -42,13 +42,9 @@ namespace server {
     return done()
   }
 
+  // this function has been "ruined" by the lack of Promises in node-redis,
+  // I've tried wrapping it but failed, so it's a bit ugly
   const verifyJWT = async (request, reply, done) => {
-    // TODO is this needed?
-    if (request.body && request.body.failureWithReply) {
-      reply.code(401).send({ message: 'Unauthorized' })
-      return done(new Error())
-    }
-
     const token = request.cookies.token
     if (!token) {
       console.log('No token found in the cookie')
@@ -56,17 +52,21 @@ namespace server {
       return done(new Error())
     }
 
+    const username = fastify.jwt.decode(token).payload.sub
     try {
+      const isPresent = await jwtTokens.isRefreshTokenPresent(username)
+      if (!isPresent) {
+        console.log('No refresh token found in database')
+        reply.code(401).send({ message: 'Unauthorized' })
+        return done(new Error())
+      }
       await request.jwtVerify()
+      return done()
     } catch (err) {
       if (err.message == 'Authorization token expired') {
-        const username = fastify.jwt.decode(token).sub
-
-
         jwtTokens
           .canCreate(username, request.cookies.refreshToken)
           .then(canCreate => {
-
             if (!canCreate) {
               console.log('Preventing token from refreshing, records do not match')
               reply.code(401).send({ message: 'Unauthorized' })
@@ -91,8 +91,6 @@ namespace server {
       reply.code(401).send({ message: 'Unauthorized' })
       return done(new Error())
     }
-
-    return done()
   }
 
   const verifyAdmin = async (request, reply, done) => {
@@ -108,13 +106,6 @@ namespace server {
   fastify.decorate('verifyJWT', verifyJWT)
   fastify.decorate('verifyCredentials', verifyCredentials)
   fastify.decorate('verifyAdmin', verifyAdmin)
-
-  // TODO at the end also provide a mean to use the endpoints with APIs, not just
-  // cookies, because they're required by the frontend
-  // so the example is complete
-
-  // TODO add /api to the routes
-  // https://www.fastify.io/docs/latest/Routes/#route-prefixing
 
   fastify.after(() => {
     fastify.route({
