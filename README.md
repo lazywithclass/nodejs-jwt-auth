@@ -2,16 +2,21 @@
 
 Experimenting with JWT
 
-### Development
+### How to experiment with this
 
-For the authentication server
+Make sure your the following to create the auth keys
 
-```bash
+```sh
 $ cd auth-server
-
-# this starts the compilation process for TS, in watch mode
-$ npm run compile-watch
-
-# ...and in another tab or tmux panel this starts the server in watch mode
-$ npm run start-dev
+$ npm run setup-jwks
 ```
+
+You will then need a redis instance, you can spin up one for free at redislabs.com
+
+To start all required servers by this example just run
+
+```sh
+$ ./start-all.sh
+```
+
+Or if you prefer to start servers individually have a look inside the script.

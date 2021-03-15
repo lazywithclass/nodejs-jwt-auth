@@ -63,3 +63,7 @@ a.logout:hover {
   cursor: pointer;
   text-decoration: underline;
 }
+
+a.selected {
+  text-decoration: underline;
+}

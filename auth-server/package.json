@@ -2,7 +2,8 @@
   "name": "auth-server",
   "scripts": {
     "compile-watch": "./node_modules/.bin/tsc -w -p src",
-    "start-dev": "DOMAIN=\"test.app.localhost\" ./node_modules/.bin/nodemon dist/server.js"
+    "start-dev": "DOMAIN=\"test.app.localhost\" ./node_modules/.bin/nodemon dist/server.js",
+    "setup-jwks": "node setup-jwk.js"
   },
   "dependencies": {
     "fastify": "^3.13.0",
@@ -11,6 +12,7 @@
     "fastify-cors": "^5.2.0",
     "fastify-jwt": "^2.3.0",
     "get-jwks": "^3.0.0",
+    "jwk-to-pem": "^2.0.4",
     "redis": "^3.0.2"
   },
   "devDependencies": {

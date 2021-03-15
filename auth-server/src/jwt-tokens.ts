@@ -1,11 +1,13 @@
 namespace tokens {
 
   const jose = require('node-jose')
+  const jwt = require('jsonwebtoken')
+  const jwkToPem = require('jwk-to-pem')
   const fs = require('fs')
   const redis = require('redis')
   const config = require('../config.json')
   const db = require('./db')
-  const client = redis.createClient({
+  const redisClient = redis.createClient({
     port: config.redis.port,
     host: config.redis.host,
     password: config.redis.password,
@@ -20,7 +22,7 @@ namespace tokens {
 
   const canCreate = (username, oldRefreshToken) => {
     return new Promise((resolve, reject) => {
-      client.get(redisRefreshTokenKey(username), function(err, redisRefreshToken) {
+      redisClient.get(redisRefreshTokenKey(username), function(err, redisRefreshToken) {
         if (err) {
           return reject(err)
         }
@@ -28,24 +30,6 @@ namespace tokens {
       })
     })
   }
-
-  // https://stackoverflow.com/questions/21978658/invalidating-json-web-tokens#comment45057142_23089839
-  // TODO invalidate
-
-  // TODO based on user roles there should be a different payload in the token
-  // fetch the record from redis
-
-  // https://auth0.com/blog/a-look-at-the-latest-draft-for-jwt-bcp/
-  //"Validate All Possible Claims"
-  // iss -> issuer
-  // aud -> audience
-  // exp -> expiration time
-  // typ -> types
-  // https://tools.ietf.org/html/rfc7519#section-4.1
-
-  // TODO also remember to add different roles to tokens,
-  // so you could show how to query the books server
-  // without touching the auth server
 
   // this function has been "ruined" by the lack of Promises in node-redis,
   // I've trie wrapping it but failed, so it's a bit ugly
@@ -84,12 +68,12 @@ namespace tokens {
             .final()
         ]).then(tokens => {
           const [accessToken, refreshToken] = tokens
-          return client.set(redisRefreshTokenKey(username), refreshToken, (err, reply) => {
+          return redisClient.set(redisRefreshTokenKey(username), refreshToken, (err, reply) => {
             if (err) {
               return reject(err)
             }
 
-            return client.expire(redisRefreshTokenKey(username), REFRESH_TOKEN_TTL, (err, reply) => {
+            return redisClient.expire(redisRefreshTokenKey(username), REFRESH_TOKEN_TTL, (err, reply) => {
               if (err) {
                 return reject(err)
               }
@@ -102,10 +86,46 @@ namespace tokens {
   }
 
   const remove = username => {
-    client.del(redisRefreshTokenKey(username), (err, reply) => {
+    redisClient.del(redisRefreshTokenKey(username), (err, reply) => {
       if (err) {
         console.log('Could not remove refresh token from redis', err)
       }
+    })
+  }
+
+
+  // expects date to be ms since epoch up to the time at which
+  // we want to remove tokens
+  const removeUpToDate = (removeUpTo) => {
+    const msNow = new Date().getTime()
+    const usernames = Object.keys(db.read('users'))
+    usernames.forEach(u => {
+      redisClient.get(redisRefreshTokenKey(u), (err, token) => {
+        if (!token) {
+          return
+        }
+
+        const ks = require('../certs/keys.json')
+        // TODO I've tried using
+        // jose.JWK.asKeyStore(ks.toString()).then(keyStore => {
+        // const [key] = keyStore.all({ alg: 'RS256' })
+        // but then key is missing some properties, I couldn't find
+        // a way to get all of them using keyStore APIs
+        const key = ks.keys[0]
+        var pem = jwkToPem(key)
+        jwt.verify(token, pem, { algorithms: ['RS256'] }, function(err, decodedToken) {
+          if (err) {
+              console.log('Error:', '\n', err, '\n');
+          }
+          if (decodedToken.iat < removeUpTo) {
+            redisClient.del(redisRefreshTokenKey(u), function(err) {
+              if (err) {
+                console.log(`Failed to remove ${redisRefreshTokenKey(u)}`)
+              }
+            })
+          }
+        })
+      })
     })
   }
 

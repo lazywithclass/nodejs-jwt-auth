@@ -65,7 +65,6 @@ namespace routes {
   }
 
   const jwks = async function(request, reply) {
-
     const ks = fs.readFileSync('certs/keys.json')
     const keyStore = await jose.JWK.asKeyStore(ks.toString())
     return keyStore.toJSON()
