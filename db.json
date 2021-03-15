@@ -13,6 +13,12 @@
       "roles": [
         "reader"
       ]
+    },
+    "john": {
+      "username": "john",
+      "password": "doe",
+      "roles": [
+      ]
     }
   }
 }

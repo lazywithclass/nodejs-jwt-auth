@@ -97,11 +97,14 @@ namespace tokens {
   }
 
   const remove = username => {
-    redisClient.del(redisRefreshTokenKey(username), (err, reply) => {
-      console.log("REMOVINMG", redisRefreshTokenKey(username))
-      if (err) {
-        console.log('Could not remove refresh token from redis', err)
-      }
+    return new Promise((resolve, reject) => {
+      return redisClient.del(redisRefreshTokenKey(username), (err, reply) => {
+        if (err) {
+          console.log('Could not remove refresh token from redis', err)
+          return reject(err)
+        }
+        return resolve(username)
+      })
     })
   }
 
@@ -150,12 +153,23 @@ namespace tokens {
     }))
   }
 
+  const changeRolesTo = (username, newRoles) => {
+    const dbUser = db.read('users', username)
+    dbUser.roles = newRoles
+    db.write('users', username, dbUser)
+    return new Promise((resolve, reject) => {
+      return remove(username)
+        .then(() => resolve(username))
+        .catch((err) => reject(err))
+    })
+  }
 
   module.exports = {
     canCreate,
     create,
     remove,
     isRefreshTokenPresent,
-    removeUpToDate
+    removeUpToDate,
+    changeRolesTo
   }
 }

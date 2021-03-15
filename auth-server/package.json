@@ -4,7 +4,8 @@
     "compile-watch": "./node_modules/.bin/tsc -w -p src",
     "start-dev": "DOMAIN=\"test.app.localhost\" ./node_modules/.bin/nodemon dist/server.js",
     "setup-jwks": "node setup-jwk.js",
-    "revoke-up-to": "node revoke-up-to.js $1"
+    "revoke-up-to": "node revoke-up-to.js",
+    "change-roles-to": "node change-roles-to"
   },
   "dependencies": {
     "fastify": "^3.13.0",
