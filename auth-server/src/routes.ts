@@ -53,9 +53,6 @@ namespace routes {
         // TODO secure: false here should be removed
         // as I've added it just for the testing env
         // fix: have https even in test
-
-        // TODO should the path be different?
-        // like /refresh?
         domain: DOMAIN, path: '/', secure: false, httpOnly: true, sameSite: true
       })
       .code(200)

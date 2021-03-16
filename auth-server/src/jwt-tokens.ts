@@ -136,7 +136,6 @@ namespace tokens {
                 return reject(err)
             }
 
-            console.log((decodedToken.iat * 1000), removeUpTo)
             if ((decodedToken.iat * 1000) < removeUpTo) {
               return redisClient.del(redisRefreshTokenKey(u), function(err) {
                 if (err) {
