@@ -35,9 +35,7 @@ namespace routes {
   const logout = async function(request, reply) {
     const username = this.jwt.decode(request.cookies.token).payload.sub
     await jwtTokens.remove(username)
-    const accessToken = this.jwt.sign({}, { expiresIn: '0m' })
-    const refreshToken = this.jwt.sign({}, { expiresIn: '0m' })
-    setCookiesInResponse(reply, accessToken, refreshToken)
+    setCookiesInResponse(reply, 'deleted', 'deleted')
     return {}
   }
 

@@ -43,7 +43,9 @@ namespace server {
   }
 
   // this function has been "ruined" by the lack of Promises in node-redis,
-  // I've tried wrapping it but failed, so it's a bit ugly
+  // I've partially fixed the issue by wrapping the required calls with Promises,
+  // but it's still a bit ugly since I preferred to push out more features
+  // to allow for more "discussion surface"
   const verifyJWT = async (request, reply, done) => {
     const token = request.cookies.token
     if (!token) {
